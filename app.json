@@ -1,14 +1,15 @@
 {
   "expo": {
-    "name": "app",
-    "slug": "app",
+    "name": "Bridge",
+    "slug": "bridge",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "app",
+    "scheme": "bridge",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "app.bridgeplank.bridge"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,13 +25,17 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "expo-dev-client",
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#F6F0E6",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 76,
+          "dark": {
+            "backgroundColor": "#1A120D"
+          }
         }
       ]
     ],

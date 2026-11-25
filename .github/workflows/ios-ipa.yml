@@ -1,0 +1,54 @@
+# Unsigned iOS dev build (expo-dev-client) → Bridge.ipa artifact. Owner installs it with Sideloadly (STACK.md §3).
+# Runs only by hand (Actions → «iOS IPA» → Run workflow) so pushes don't spend Mac minutes.
+name: iOS IPA
+
+on:
+  workflow_dispatch:
+    inputs:
+      configuration:
+        description: Debug = dev build (JS live from `expo start` over Wi-Fi); Release = JS inside the app
+        type: choice
+        options: [Debug, Release]
+        default: Debug
+
+jobs:
+  ipa:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Prebuild iOS project
+        run: npx expo prebuild --platform ios --clean
+
+      - name: Archive without signing
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -workspace ios/Bridge.xcworkspace \
+            -scheme Bridge \
+            -configuration "${{ inputs.configuration }}" \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Bridge.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            | tail -n 200
+
+      - name: Pack IPA
+        run: |
+          mkdir -p "$RUNNER_TEMP/ipa/Payload"
+          cp -R "$RUNNER_TEMP/Bridge.xcarchive/Products/Applications/Bridge.app" "$RUNNER_TEMP/ipa/Payload/"
+          cd "$RUNNER_TEMP/ipa" && zip -qry "$GITHUB_WORKSPACE/Bridge.ipa" Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bridge-${{ inputs.configuration }}-ipa
+          path: Bridge.ipa
+          retention-days: 14
